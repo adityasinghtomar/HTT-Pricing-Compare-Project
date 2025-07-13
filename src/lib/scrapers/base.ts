@@ -43,7 +43,19 @@ export class BaseScraper {
           '--no-zygote',
           '--disable-gpu',
           '--memory-pressure-off',
-          '--max_old_space_size=4096'
+          '--max_old_space_size=4096',
+          // Additional stealth mode arguments
+          '--disable-blink-features=AutomationControlled',
+          '--disable-features=VizDisplayCompositor',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-renderer-backgrounding',
+          '--disable-web-security',
+          '--disable-features=TranslateUI',
+          '--disable-ipc-flooding-protection',
+          '--no-default-browser-check',
+          '--no-first-run',
+          '--disable-default-apps'
         ]
       })
       BaseScraper.browserStartTime = now
@@ -56,12 +68,47 @@ export class BaseScraper {
     const browser = await this.initBrowser()
     const page = await browser.newPage()
 
+    // Enhanced stealth mode setup
+    await page.evaluateOnNewDocument(() => {
+      // Remove webdriver property
+      Object.defineProperty(navigator, 'webdriver', {
+        get: () => undefined,
+      })
+
+      // Mock plugins
+      Object.defineProperty(navigator, 'plugins', {
+        get: () => [1, 2, 3, 4, 5],
+      })
+
+      // Mock languages
+      Object.defineProperty(navigator, 'languages', {
+        get: () => ['en-US', 'en'],
+      })
+
+      // Override the `chrome` property to make it seem more like a regular Chrome browser
+      Object.defineProperty(window, 'chrome', {
+        get: () => ({
+          runtime: {},
+        }),
+      })
+
+      // Override the `permissions` property
+      const originalQuery = window.navigator.permissions.query
+      window.navigator.permissions.query = (parameters) => (
+        parameters.name === 'notifications' ?
+          Promise.resolve({ state: Notification.permission }) :
+          originalQuery(parameters)
+      )
+    })
+
     // Set user agent to avoid detection - rotate between different agents
     const userAgents = [
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0'
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0',
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15'
     ]
     const randomAgent = userAgents[Math.floor(Math.random() * userAgents.length)]
     await page.setUserAgent(randomAgent)
@@ -83,14 +130,17 @@ export class BaseScraper {
       'Sec-Fetch-Mode': 'navigate',
       'Sec-Fetch-Site': 'none',
       'Cache-Control': 'max-age=0',
+      'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+      'sec-ch-ua-mobile': '?0',
+      'sec-ch-ua-platform': '"Windows"'
     })
 
-    // Set default timeout
-    page.setDefaultTimeout(60000) // 60 seconds (reduced from 90)
-    page.setDefaultNavigationTimeout(60000) // 60 seconds
+    // Increased timeouts for better success rate
+    page.setDefaultTimeout(90000) // 90 seconds (increased from 60)
+    page.setDefaultNavigationTimeout(90000) // 90 seconds
 
     // Add random delay to avoid detection
-    await new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 500)) // 0.5-1.5 seconds
+    await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 1000)) // 1-3 seconds
 
     return page
   }
@@ -179,13 +229,59 @@ export class BaseScraper {
     return query.trim()
   }
 
-  // Utility method to check if product matches
+  // Enhanced utility method to check if product matches
   isProductMatch(productText: string, product: Product): boolean {
     const text = productText.toLowerCase()
     const brand = product.brand.toLowerCase()
     const partNumber = product.partNumber.toLowerCase()
-    
-    return text.includes(brand) && text.includes(partNumber)
+
+    // More flexible matching logic
+    const hasExactPartNumber = text.includes(partNumber)
+    const hasBrand = text.includes(brand)
+    const hasPartNumberWithoutSpaces = text.includes(partNumber.replace(/\s+/g, ''))
+    const hasPartNumberWithDashes = text.includes(partNumber.replace(/\s+/g, '-'))
+    const hasPartNumberWithUnderscores = text.includes(partNumber.replace(/\s+/g, '_'))
+
+    // Check for partial matches (useful for products like "3M 2091" vs "2091")
+    const partNumberWords = partNumber.split(/\s+/)
+    const hasAllPartNumberWords = partNumberWords.every(word => text.includes(word))
+
+    // Return true if we have brand + part number, or just a strong part number match
+    return (hasBrand && hasExactPartNumber) ||
+           (hasBrand && hasPartNumberWithoutSpaces) ||
+           (hasBrand && hasPartNumberWithDashes) ||
+           (hasBrand && hasPartNumberWithUnderscores) ||
+           (hasBrand && hasAllPartNumberWords) ||
+           hasExactPartNumber ||
+           hasPartNumberWithoutSpaces
+  }
+
+  // Retry mechanism for failed scraping attempts
+  async retryOperation<T>(
+    operation: () => Promise<T>,
+    maxRetries: number = 2,
+    delayMs: number = 2000
+  ): Promise<T> {
+    let lastError: Error | null = null
+
+    for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
+      try {
+        if (attempt > 1) {
+          console.log(`Retry attempt ${attempt - 1}/${maxRetries}`)
+          await new Promise(resolve => setTimeout(resolve, delayMs * attempt))
+        }
+        return await operation()
+      } catch (error) {
+        lastError = error as Error
+        console.log(`Attempt ${attempt} failed:`, error instanceof Error ? error.message : 'Unknown error')
+
+        if (attempt === maxRetries + 1) {
+          throw lastError
+        }
+      }
+    }
+
+    throw lastError || new Error('Operation failed after retries')
   }
 }
 

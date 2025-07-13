@@ -2,31 +2,36 @@ import { BaseScraper, ScrapedData, Product } from './base'
 
 class HazmastersScraper extends BaseScraper {
   async scrape(product: Product): Promise<ScrapedData> {
-    const page = await this.createPage()
+    return this.retryOperation(async () => {
+      const page = await this.createPage()
 
-    try {
-      const searchQuery = this.buildSearchQuery(product)
-      const searchUrl = `https://www.hazmasters.com/products?q=${encodeURIComponent(searchQuery)}`
-
-      console.log(`Hazmasters: Searching for "${searchQuery}"`)
-
-      await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 60000 })
-
-      // Wait for search results
       try {
-        await page.waitForSelector('.product-item, .search-results, .product-grid, .no-results', { timeout: 10000 })
-      } catch {
-        // Continue if selectors not found
-      }
+        const searchQuery = this.buildSearchQuery(product)
+        const searchUrl = `https://www.hazmasters.com/products?q=${encodeURIComponent(searchQuery)}`
 
-      // Check if there are no results
-      const noResults = await page.$('.no-results, .no-search-results')
-      if (noResults) {
-        return {
-          price: 'Not Found',
-          availability: 'Product not found'
+        console.log(`Hazmasters: Searching for "${searchQuery}"`)
+
+        // Increased timeout and better wait strategy
+        await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 120000 })
+
+        // Additional wait for slow loading
+        await new Promise(resolve => setTimeout(resolve, 5000))
+
+        // Wait for search results
+        try {
+          await page.waitForSelector('.product-item, .search-results, .product-grid, .no-results', { timeout: 10000 })
+        } catch {
+          // Continue if selectors not found
         }
-      }
+
+        // Check if there are no results
+        const noResults = await page.$('.no-results, .no-search-results')
+        if (noResults) {
+          return {
+            price: 'Not Found',
+            availability: 'Product not found'
+          }
+        }
 
       // Extract product information
       const results = await page.evaluate((product: any) => {
@@ -78,20 +83,18 @@ class HazmastersScraper extends BaseScraper {
         }
       }
 
-      return {
-        price: 'Not Found',
-        availability: 'Product not found'
-      }
+        return {
+          price: 'Not Found',
+          availability: 'Product not found'
+        }
 
-    } catch (error) {
-      console.error('Hazmasters scraping error:', error)
-      return {
-        price: 'Error',
-        availability: 'Scraping failed'
+      } catch (error) {
+        console.error('Hazmasters scraping error:', error)
+        throw error // Re-throw to trigger retry
+      } finally {
+        await this.closePage(page)
       }
-    } finally {
-      await page.close()
-    }
+    }, 2, 5000) // Retry up to 2 times with 5 second delays
   }
 }
 

@@ -11,10 +11,10 @@ class UlineScraper extends BaseScraper {
       console.log(`ULINE: Searching for "${searchQuery}"`)
       console.log(`ULINE: Search URL: ${searchUrl}`)
 
-      await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 60000 })
+      await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 90000 })
 
-      // Add delay to let page settle
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // Add longer delay to let page settle and avoid detection
+      await new Promise(resolve => setTimeout(resolve, 4000))
 
       // Log page info with error handling
       let pageTitle = ''
@@ -22,12 +22,27 @@ class UlineScraper extends BaseScraper {
         pageTitle = await page.title()
         console.log(`ULINE: Page loaded - Title: "${pageTitle}"`)
 
-        // Check for CAPTCHA/challenge page
-        if (pageTitle.includes('Challenge') || pageTitle.includes('Validation')) {
+        // Enhanced CAPTCHA/challenge page detection
+        if (pageTitle.includes('Challenge') ||
+            pageTitle.includes('Validation') ||
+            pageTitle.includes('Security') ||
+            pageTitle.includes('Blocked') ||
+            pageTitle.toLowerCase().includes('captcha') ||
+            pageTitle.toLowerCase().includes('robot')) {
           console.log(`ULINE: CAPTCHA/Challenge page detected, skipping...`)
           return {
             price: 'Not Available',
             availability: 'CAPTCHA protection detected'
+          }
+        }
+
+        // Check if we're on the actual search results page
+        const currentUrl = page.url()
+        if (!currentUrl.includes('uline.ca') || currentUrl.includes('challenge')) {
+          console.log(`ULINE: Redirected away from search results, URL: ${currentUrl}`)
+          return {
+            price: 'Not Available',
+            availability: 'Access blocked or redirected'
           }
         }
       } catch (titleError) {
