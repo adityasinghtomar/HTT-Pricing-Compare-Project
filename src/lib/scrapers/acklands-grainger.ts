@@ -2,27 +2,33 @@ import { BaseScraper, ScrapedData, Product } from './base'
 
 class AcklandsGraingerScraper extends BaseScraper {
   async scrape(product: Product): Promise<ScrapedData> {
-    const page = await this.createPage()
+    return this.retryOperation(async () => {
+      const page = await this.createPage()
 
-    try {
-      const searchQuery = this.buildSearchQuery(product)
-      const searchUrl = `https://www.grainger.ca/en/search/?searchBar=true&nls=NLSAA_NA-1&text=${encodeURIComponent(searchQuery)}`
-
-      console.log(`Acklands Grainger: Searching for "${searchQuery}"`)
-      console.log(`Acklands Grainger: Search URL: ${searchUrl}`)
-
-      await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 60000 })
-
-      // Log page info
-      const pageTitle = await page.title()
-      console.log(`Acklands Grainger: Page loaded - Title: "${pageTitle}"`)
-
-      // Wait for search results
       try {
-        await page.waitForSelector('.search-results-container, .product-item, .search-result', { timeout: 10000 })
-      } catch {
-        // Continue if selectors not found
-      }
+        const searchQuery = this.buildSearchQuery(product)
+        const searchUrl = `https://www.grainger.ca/en/search/?searchBar=true&nls=NLSAA_NA-1&text=${encodeURIComponent(searchQuery)}`
+
+        console.log(`Acklands Grainger: Searching for "${searchQuery}"`)
+        console.log(`Acklands Grainger: Search URL: ${searchUrl}`)
+
+        await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 90000 })
+
+        // Log page info
+        const pageTitle = await page.title()
+        console.log(`Acklands Grainger: Page loaded - Title: "${pageTitle}"`)
+
+        // Wait for search results with more selectors
+        try {
+          await page.waitForSelector('.search-results-container, .product-item, .search-result, [class*="product"], [class*="result"], .item', { timeout: 15000 })
+          console.log(`Acklands Grainger: Search results loaded`)
+        } catch (waitError) {
+          console.log(`Acklands Grainger: Timeout waiting for search results:`, waitError instanceof Error ? waitError.message : 'Unknown error')
+
+          // Check page content for debugging
+          const bodyText = await page.evaluate(() => document.body?.innerText?.substring(0, 500) || 'No body')
+          console.log(`Acklands Grainger: Page content preview:`, bodyText.substring(0, 200))
+        }
 
       // Check how many search result items we found
       const itemCount = await page.evaluate(() => {
@@ -78,31 +84,29 @@ class AcklandsGraingerScraper extends BaseScraper {
         return results
       }, product)
 
-      if (results.length > 0) {
-        const bestMatch = results[0]
-        const cleanPrice = this.extractPrice(bestMatch.price)
+        if (results.length > 0) {
+          const bestMatch = results[0]
+          const cleanPrice = this.extractPrice(bestMatch.price)
+
+          return {
+            price: cleanPrice,
+            link: bestMatch.link,
+            availability: 'Available'
+          }
+        }
 
         return {
-          price: cleanPrice,
-          link: bestMatch.link,
-          availability: 'Available'
+          price: 'Not Found',
+          availability: 'Product not found'
         }
-      }
 
-      return {
-        price: 'Not Found',
-        availability: 'Product not found'
+      } catch (error) {
+        console.error('Acklands Grainger scraping error:', error)
+        throw error // Re-throw to trigger retry
+      } finally {
+        await this.closePage(page)
       }
-
-    } catch (error) {
-      console.error('Acklands Grainger scraping error:', error)
-      return {
-        price: 'Error',
-        availability: 'Scraping failed'
-      }
-    } finally {
-      await page.close()
-    }
+    }, 2, 3000) // Retry up to 2 times with 3 second delays
   }
 }
 
