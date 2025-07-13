@@ -130,7 +130,7 @@ class AmazonScraper extends BaseScraper {
         availability: 'Scraping failed'
       }
     } finally {
-      await page.close()
+      await this.closePage(page)
     }
   }
 }

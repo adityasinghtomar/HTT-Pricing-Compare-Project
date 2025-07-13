@@ -13,10 +13,31 @@ class UlineScraper extends BaseScraper {
 
       await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 60000 })
 
-      // Log page info
-      const pageTitle = await page.title()
-      console.log(`ULINE: Page loaded - Title: "${pageTitle}"`)
-      
+      // Add delay to let page settle
+      await new Promise(resolve => setTimeout(resolve, 2000))
+
+      // Log page info with error handling
+      let pageTitle = ''
+      try {
+        pageTitle = await page.title()
+        console.log(`ULINE: Page loaded - Title: "${pageTitle}"`)
+
+        // Check for CAPTCHA/challenge page
+        if (pageTitle.includes('Challenge') || pageTitle.includes('Validation')) {
+          console.log(`ULINE: CAPTCHA/Challenge page detected, skipping...`)
+          return {
+            price: 'Not Available',
+            availability: 'CAPTCHA protection detected'
+          }
+        }
+      } catch (titleError) {
+        console.log(`ULINE: Error getting page title:`, titleError instanceof Error ? titleError.message : 'Unknown error')
+        return {
+          price: 'Not Available',
+          availability: 'Page navigation error'
+        }
+      }
+
       // Wait for search results or no results message
       try {
         await page.waitForSelector('.search-results, .product-item, .no-results, .search-result', { timeout: 10000 })

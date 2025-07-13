@@ -13,11 +13,26 @@ export interface Product {
 }
 
 export class BaseScraper {
-  private browser: Browser | null = null
+  private static browser: Browser | null = null
+  private static browserStartTime: number = 0
+  private static readonly BROWSER_RESTART_INTERVAL = 5 * 60 * 1000 // 5 minutes
 
   async initBrowser(): Promise<Browser> {
-    if (!this.browser) {
-      this.browser = await puppeteer.launch({
+    const now = Date.now()
+
+    // Restart browser every 5 minutes to prevent memory leaks
+    if (BaseScraper.browser && (now - BaseScraper.browserStartTime) > BaseScraper.BROWSER_RESTART_INTERVAL) {
+      console.log('Restarting browser to prevent memory leaks...')
+      try {
+        await BaseScraper.browser.close()
+      } catch (error) {
+        console.warn('Error closing browser:', error)
+      }
+      BaseScraper.browser = null
+    }
+
+    if (!BaseScraper.browser) {
+      BaseScraper.browser = await puppeteer.launch({
         headless: 'new',
         args: [
           '--no-sandbox',
@@ -26,12 +41,15 @@ export class BaseScraper {
           '--disable-accelerated-2d-canvas',
           '--no-first-run',
           '--no-zygote',
-          '--single-process',
-          '--disable-gpu'
+          '--disable-gpu',
+          '--memory-pressure-off',
+          '--max_old_space_size=4096'
         ]
       })
+      BaseScraper.browserStartTime = now
+      console.log('Browser launched successfully')
     }
-    return this.browser
+    return BaseScraper.browser
   }
 
   async createPage(): Promise<Page> {
@@ -68,13 +86,24 @@ export class BaseScraper {
     })
 
     // Set default timeout
-    page.setDefaultTimeout(90000) // 90 seconds
-    page.setDefaultNavigationTimeout(90000) // 90 seconds
+    page.setDefaultTimeout(60000) // 60 seconds (reduced from 90)
+    page.setDefaultNavigationTimeout(60000) // 60 seconds
 
     // Add random delay to avoid detection
-    await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 1000)) // 1-3 seconds
+    await new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 500)) // 0.5-1.5 seconds
 
     return page
+  }
+
+  // Cleanup method to ensure pages are properly closed
+  async closePage(page: Page): Promise<void> {
+    try {
+      if (page && !page.isClosed()) {
+        await page.close()
+      }
+    } catch (error) {
+      console.warn('Error closing page:', error)
+    }
   }
 
   async closeBrowser(): Promise<void> {
