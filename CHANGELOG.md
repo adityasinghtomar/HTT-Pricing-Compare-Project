@@ -174,7 +174,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute to th
 For support, please:
 1. Check the [User Guide](docs/USER_GUIDE.md)
 2. Review [API Documentation](docs/API.md)
-3. Search existing [GitHub Issues](https://github.com/your-repo/issues)
+3. Search existing [GitHub Issues](https://github.com/adityasinghtomar/HTT-Pricing-Compare-Project/issues)
 4. Create a new issue if needed
 
 ## License

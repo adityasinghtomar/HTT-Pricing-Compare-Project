@@ -2,8 +2,8 @@
 
 > **Professional price comparison tool for safety equipment across 8 major suppliers**
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/your-repo)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/your-repo)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/adityasinghtomar/HTT-Pricing-Compare-Project)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/adityasinghtomar/HTT-Pricing-Compare-Project)
 [![License](https://img.shields.io/badge/license-ISC-green)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
 
@@ -105,8 +105,8 @@ docker-compose up -d
 ```
 
 ### ☁️ One-Click Deploy
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-repo)
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/your-repo)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/adityasinghtomar/HTT-Pricing-Compare-Project)
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/adityasinghtomar/HTT-Pricing-Compare-Project)
 
 ## Usage
 

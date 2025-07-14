@@ -6,7 +6,7 @@ import { scrapeSBSimpson } from '@/lib/scrapers/sb-simpson'
 import { scrapeSPIHealthSafety } from '@/lib/scrapers/spi-health-safety'
 import { scrapeHazmasters } from '@/lib/scrapers/hazmasters'
 import { scrapeAcklandsGrainger } from '@/lib/scrapers/acklands-grainger'
-import { scrapeVallen } from '@/lib/scrapers/vallen'
+import { scrapeVallenNew } from '@/lib/scrapers/vallen-new'
 import { ProductModel, SupplierModel, PriceDataModel, ScrapingLogModel } from '@/lib/database/models'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -32,7 +32,7 @@ const scrapers = [
   { name: 'SPI Health & Safety', scraper: scrapeSPIHealthSafety },
   { name: 'Hazmasters', scraper: scrapeHazmasters },
   { name: 'Acklands Grainger', scraper: scrapeAcklandsGrainger },
-  { name: 'Vallen', scraper: scrapeVallen },
+  { name: 'Vallen', scraper: scrapeVallenNew },
 ]
 
 export async function POST(request: NextRequest) {
