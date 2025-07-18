@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       await ScrapingLogModel.create({
         session_id: sessionId,
         product_id: dbProduct?.id,
-        supplier_id: null,
+        supplier_id: undefined,
         status: 'started',
         user_agent: request.headers.get('user-agent') || undefined,
         ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined
