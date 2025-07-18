@@ -179,7 +179,11 @@ export async function POST(request: NextRequest) {
               error_message: error instanceof Error ? error.message : 'Unknown error'
             })
           } catch (dbError) {
-            console.warn(`Failed to save error to database:`, dbError.message)
+              let errorMessage = 'An unknown error occurred while saving price data.';
+              if (dbError instanceof Error) {
+                  errorMessage = dbError.message;
+              }
+              console.warn(`Failed to save error to database:`, errorMessage);
           }
         }
 
