@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { AmazonScraper } from '@/lib/scrapers/amazon'
+import { amazonScraper } from '@/lib/scrapers/amazon'
 
 export async function GET(request: NextRequest) {
   try {

@@ -26,11 +26,16 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString()
     })
 
-  } catch (error) {
-    console.error('Debug scraper error:', error)
-    return NextResponse.json(
-      { error: 'Debug scraping failed', details: error.message },
-      { status: 500 }
-    )
-  }
+// Correct Code
+    } catch (error) {
+        console.error('Debug scraper error:', error);
+        let errorMessage = 'An unknown error occurred';
+        if (error instanceof Error) {
+            errorMessage = error.message;
+        }
+        return NextResponse.json(
+            { error: 'Debug scraping failed', details: errorMessage },
+            { status: 500 }
+        );
+    }
 }
