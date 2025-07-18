@@ -30,8 +30,8 @@ class DatabaseConnection {
         connectionLimit: 10,
         queueLimit: 0,
         connectTimeout: 60000,
-        timeout: 60000,
-        reconnect: true,
+        //timeout: 60000,
+        //reconnect: true,
         charset: 'utf8mb4'
       })
 
