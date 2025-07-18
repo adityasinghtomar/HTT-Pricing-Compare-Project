@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { amazonScraper } from '@/lib/scrapers/amazon'
+import { scrapeAmazonCA } from '@/lib/scrapers/amazon'
 
 export async function GET(request: NextRequest) {
   try {
     console.log('Testing Amazon scraper with enhanced settings...')
     
-    const scraper = new AmazonScraper()
+    const scraper = new scrapeAmazonCA()
     const testProduct = { brand: '3M', partNumber: '2091', size: '' }
     
     const result = await scraper.scrape(testProduct)
