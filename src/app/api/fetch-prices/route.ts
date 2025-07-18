@@ -147,8 +147,13 @@ export async function POST(request: NextRequest) {
               scraping_duration_ms: scrapeDuration,
               raw_data: result
             })
+          // Correct Code
           } catch (dbError) {
-            console.warn(`Failed to save price data to database:`, dbError.message)
+              let errorMessage = 'An unknown error occurred while saving price data.';
+              if (dbError instanceof Error) {
+                  errorMessage = dbError.message;
+              }
+              console.warn(`Failed to save price data to database:`, errorMessage);
           }
         }
 
