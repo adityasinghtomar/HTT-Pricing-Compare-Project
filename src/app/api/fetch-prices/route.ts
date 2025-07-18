@@ -84,7 +84,9 @@ export async function POST(request: NextRequest) {
       if (dbError instanceof Error) {
           errorMessage = dbError.message;
       }
-      console.warn(`Database not available, running without database features:`, dbError.message)
+      // Use the new, safe variable here:
+      console.warn(`Database not available, running without database features:`, errorMessage);
+      
       // Continue without database - use hardcoded suppliers
       suppliers = [
         { id: 1, name: 'Amazon.ca' },
