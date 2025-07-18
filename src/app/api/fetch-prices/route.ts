@@ -227,8 +227,12 @@ export async function POST(request: NextRequest) {
     try {
       await ScrapingLogModel.updateStatus(sessionId, 'completed', endTime)
     } catch (dbError) {
-      console.warn(`Failed to log completion to database:`, dbError.message)
-    }
+              let errorMessage = 'An unknown error occurred while saving price data.';
+              if (dbError instanceof Error) {
+                  errorMessage = dbError.message;
+              }
+              console.warn(`Failed to log completion to database:`, errorMessage);
+          }
 
     console.log(`[${sessionId}] Completed in ${endTime.getTime() - startTime.getTime()}ms`)
 
@@ -253,8 +257,12 @@ export async function POST(request: NextRequest) {
         error instanceof Error ? error.message : 'Unknown error'
       )
     } catch (dbError) {
-      console.warn(`Failed to log error to database:`, dbError.message)
-    }
+              let errorMessage = 'An unknown error occurred while saving price data.';
+              if (dbError instanceof Error) {
+                  errorMessage = dbError.message;
+              }
+              console.warn(`Failed to log error to database:`, errorMessage);
+          }
 
     return NextResponse.json(
       {
