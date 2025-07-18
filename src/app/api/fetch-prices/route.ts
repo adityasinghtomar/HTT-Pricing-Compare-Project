@@ -80,6 +80,10 @@ export async function POST(request: NextRequest) {
         ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined
       })
     } catch (dbError) {
+      let errorMessage = 'An unknown database error occurred';
+      if (dbError instanceof Error) {
+          errorMessage = dbError.message;
+      }
       console.warn(`Database not available, running without database features:`, dbError.message)
       // Continue without database - use hardcoded suppliers
       suppliers = [
