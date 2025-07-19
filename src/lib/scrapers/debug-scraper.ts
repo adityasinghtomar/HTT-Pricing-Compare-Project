@@ -99,8 +99,7 @@ class DebugScraper extends BaseScraper {
             const walker = document.createTreeWalker(
               document.body,
               NodeFilter.SHOW_TEXT,
-              null,
-              false
+              null
             )
             let count = 0
             let node
