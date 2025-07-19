@@ -112,7 +112,7 @@ class AmazonScraper extends BaseScraper {
 
             // Check for partial matches
             const partNumberWords = partNumberLower.split(/\s+/)
-            const hasAllPartNumberWords = partNumberWords.every(word => titleLower.includes(word))
+            const hasAllPartNumberWords = partNumberWords.every((word: string) => titleLower.includes(word))
 
             if ((hasBrand && hasExactPartNumber) ||
                 (hasBrand && hasPartNumberWithoutSpaces) ||
