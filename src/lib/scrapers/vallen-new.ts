@@ -1,5 +1,4 @@
-import { BaseScraper } from './base'
-import { Product, ScrapedData } from '../types'
+import { BaseScraper, ScrapedData, Product } from './base'
 
 class VallenNewScraper extends BaseScraper {
   async scrape(product: Product): Promise<ScrapedData> {
