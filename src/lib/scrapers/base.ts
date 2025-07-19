@@ -97,7 +97,7 @@ export class BaseScraper {
       window.navigator.permissions.query = (parameters) =>
         parameters.name === 'notifications'
           ? Promise.resolve({ state: Notification.permission } as PermissionStatus)
-          : originalQuery(parameters);
+          : originalQuery(parameters)
       )
     })
 
