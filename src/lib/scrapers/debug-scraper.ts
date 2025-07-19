@@ -11,7 +11,7 @@ class DebugScraper extends BaseScraper {
       
       // Take a screenshot for debugging
       const timestamp = Date.now()
-      const screenshotPath = `/tmp/debug-${siteName.toLowerCase().replace(/\s+/g, '-')}-${timestamp}.png`
+      const screenshotPath = `/tmp/debug-${siteName.toLowerCase().replace(/\s+/g, '-')}-${timestamp}.png`;
       
       try {
         await page.screenshot({ 
