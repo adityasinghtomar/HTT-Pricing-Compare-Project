@@ -11,7 +11,7 @@ class DebugScraper extends BaseScraper {
       
       // Take a screenshot for debugging
       const timestamp = Date.now()
-      const screenshotPath = `debug-${siteName.toLowerCase().replace(/\s+/g, '-')}-${timestamp}.png`
+      const screenshotPath = `/tmp/debug-${siteName.toLowerCase().replace(/\s+/g, '-')}-${timestamp}.png`
       
       try {
         await page.screenshot({ 
@@ -21,7 +21,8 @@ class DebugScraper extends BaseScraper {
         })
         console.log(`${siteName}: Screenshot saved as ${screenshotPath}`)
       } catch (screenshotError) {
-        console.log(`${siteName}: Could not save screenshot:`, screenshotError.message)
+        const message = screenshotError instanceof Error ? screenshotError.message : 'Unknown error';
+        console.log(`${siteName}: Could not save screenshot:`, message);
       }
       
       // Get page title and URL for debugging
@@ -126,11 +127,12 @@ class DebugScraper extends BaseScraper {
       }
       
     } catch (error) {
-      console.error(`${siteName} debug error:`, error)
+      console.error(`${siteName} debug error:`, error);
+      const message = error instanceof Error ? error.message : 'Unknown error';
       return {
-        price: 'Debug Error',
-        availability: error.message
-      }
+          price: 'Debug Error',
+          availability: message,
+      };
     } finally {
       await page.close()
     }
