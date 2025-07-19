@@ -15,7 +15,7 @@ class DebugScraper extends BaseScraper {
       
       try {
         await page.screenshot({ 
-          path: screenshotPath, 
+          path: screenshotPath as `${string}.png` | `${string}.jpeg` | `${string}.webp`, 
           fullPage: false,
           clip: { x: 0, y: 0, width: 1366, height: 768 }
         })
