@@ -156,9 +156,9 @@ export class BaseScraper {
   }
 
   async closeBrowser(): Promise<void> {
-    if (this.browser) {
-      await this.browser.close()
-      this.browser = null
+    if (BaseScraper.browser) {
+        await BaseScraper.browser.close();
+        BaseScraper.browser = null;
     }
   }
 
