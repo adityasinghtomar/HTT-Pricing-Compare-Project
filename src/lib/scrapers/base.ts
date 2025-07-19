@@ -93,12 +93,11 @@ export class BaseScraper {
       })
 
       // Override the `permissions` property
-      const originalQuery = window.navigator.permissions.query;
-      window.navigator.permissions.query = (parameters) =>
-        parameters.name === 'notifications'
-          ? // Add the type assertion here
-            Promise.resolve({ state: Notification.permission } as PermissionStatus)
-          : originalQuery(parameters);
+      const originalQuery = window.navigator.permissions.query
+      window.navigator.permissions.query = (parameters) => (
+        parameters.name === 'notifications' ?
+          Promise.resolve({ state: Notification.permission }) :
+          originalQuery(parameters)
       )
     })
 
