@@ -98,7 +98,6 @@ export class BaseScraper {
         parameters.name === 'notifications'
           ? Promise.resolve({ state: Notification.permission } as PermissionStatus)
           : originalQuery(parameters)
-      )
     })
 
     // Set user agent to avoid detection - rotate between different agents
