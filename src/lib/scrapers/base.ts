@@ -33,7 +33,7 @@ export class BaseScraper {
 
     if (!BaseScraper.browser) {
       BaseScraper.browser = await puppeteer.launch({
-        headless: 'new',
+        headless: true,
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
